@@ -715,7 +715,7 @@ Title_3.Size = UDim2.new(0, 21, 0, 21)
 Title_3.Font = Enum.Font.Garamond
 Title_3.Text = "Switch"
 Title_3.TextColor3 = Color3.new(0.784314, 0.784314, 0.784314)
-Title_3.TextSize = 20
+Title_3.TextSize = 19
 Title_3.TextXAlignment = Enum.TextXAlignment.Left
 
 Button_2.Name = "Button"
