@@ -181,47 +181,16 @@ Title.Position = UDim2.new(0, 30, 0, 3)
 Title.Size = UDim2.new(0, 200, 0, 20)
 Title.Font = Enum.Font.Bangers
 Title.Text = "Gamer Time"
-Title.TextColor3 = Color3.new(1, 1, 1) 
+Title.TextColor3 = Color3.new(1, 1, 1)
 Title.TextSize = 20
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
-local gradient = Instance.new("UIGradient", Title)
-gradient.Color = ColorSequence.new{
+local titleGradient = Instance.new("UIGradient", Title)
+titleGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,255)),
     ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,0,255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0,255,255))
 }
-
-do 
-    local TitleObj = Window:FindFirstChild("Title")
-    local Bar = Window:FindFirstChild("Bar")
-    local Base = Bar:FindFirstChild("Base")
-    local Top = Bar:FindFirstChild("Top")
-    local SplitFrame = Window:FindFirstChild("TabSelection"):FindFirstChild("Frame")
-    local Toggle = Bar:FindFirstChild("Toggle")
-
-    spawn(function()
-        while true do
-            Bar.BackgroundColor3 = ui_options.main_color
-            Base.BackgroundColor3 = ui_options.main_color
-            Base.ImageColor3 = ui_options.main_color
-            Top.ImageColor3 = ui_options.main_color
-            SplitFrame.BackgroundColor3 = ui_options.main_color
-
-            RS.Heartbeat:Wait()
-        end
-    end)
-    
-    spawn(function()
-        while TitleObj and TitleObj.Parent do
-            for i = 0, 360 do
-                gradient.Rotation = i
-                task.wait(0.02)
-            end
-        end
-    end)
-
-end
 
 TabSelection.Name = "TabSelection"
 TabSelection.Parent = Window
@@ -993,25 +962,26 @@ function library:AddWindow(title, options)
 	Window.Size = UDim2.new(0, options.min_size.X, 0, options.min_size.Y)
 	Window.ZIndex = Window.ZIndex + (windows * 10)
 
-	do -- Altering Window Color
-		local Title = Window:FindFirstChild("Title")
+	do 
+    local WindowTitle = Window:FindFirstChild("Title")
 		local Bar = Window:FindFirstChild("Bar")
 		local Base = Bar:FindFirstChild("Base")
 		local Top = Bar:FindFirstChild("Top")
 		local SplitFrame = Window:FindFirstChild("TabSelection"):FindFirstChild("Frame")
 		local Toggle = Bar:FindFirstChild("Toggle")
 
-		spawn(function()
-			while true do
-				Bar.BackgroundColor3 = options.main_color
-				Base.BackgroundColor3 = options.main_color
-				Base.ImageColor3 = options.main_color
-				Top.ImageColor3 = options.main_color
-				SplitFrame.BackgroundColor3 = options.main_color
-
-				RS.Heartbeat:Wait()
-			end
-		end)
+		
+    spawn(function()
+        local grad = WindowTitle:FindFirstChild("UIGradient")
+        if grad then
+            while WindowTitle and WindowTitle.Parent do
+                for i = 0, 360 do
+                    grad.Rotation = i
+                    task.wait(0.02)
+                end
+            end
+        end
+    end)
 
 	end
 
