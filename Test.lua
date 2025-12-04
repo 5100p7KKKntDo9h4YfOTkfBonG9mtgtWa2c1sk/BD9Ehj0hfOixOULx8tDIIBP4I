@@ -92,7 +92,6 @@ Prefabs.BackgroundColor3 = Color3.new(1, 1, 1)
 Prefabs.Size = UDim2.new(0, 100, 0, 100)
 Prefabs.Visible = false
 
-
 Label.Name = "Label"
 Label.Parent = Prefabs
 Label.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -103,6 +102,13 @@ Label.Text = "Hello, world 123"
 Label.TextColor3 = Color3.new(1, 1, 1)
 Label.TextSize = 17
 Label.TextXAlignment = Enum.TextXAlignment.Left
+
+local labelGradient = Instance.new("UIGradient", Label)
+labelGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 200, 200)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+}
 
 Window.Name = "Window"
 Window.Parent = Prefabs
@@ -1165,21 +1171,31 @@ end
 					show()
 				end
 
-				do -- Tab Elements
-
-					function tab_data:AddLabel(label_text) -- [Label]
-						label_text = tostring(label_text or "New Label")
-
-						local label = Prefabs:FindFirstChild("Label"):Clone()
-
-						label.Parent = new_tab
-						label.Text = label_text
-						label.Size = UDim2.new(0, gNameLen(label), 0, 20)
-						label.ZIndex = label.ZIndex + (windows * 10)
-
-						return label
-					end
-
+do -- Tab Elements
+    function tab_data:AddLabel(label_text) -- [Label]
+        label_text = tostring(label_text or "New Label")
+        local label = Prefabs:FindFirstChild("Label"):Clone()
+        label.Parent = new_tab
+        label.Text = label_text
+        label.Size = UDim2.new(0, gNameLen(label), 0, 20)
+        label.ZIndex = label.ZIndex + (windows * 10)
+        
+        -- Add animated gradient effect
+        local grad = label:FindFirstChild("UIGradient")
+        if grad then
+            spawn(function()
+                while label and label.Parent do
+                    for i = 0, 360 do
+                        grad.Rotation = i
+                        task.wait(0.02)
+                    end
+                end
+            end)
+        end
+        
+        return label
+    end
+end
 					function tab_data:AddButton(button_text, callback) -- [Button]
 						button_text = tostring(button_text or "New Button")
 						callback = typeof(callback) == "function" and callback or function()end
