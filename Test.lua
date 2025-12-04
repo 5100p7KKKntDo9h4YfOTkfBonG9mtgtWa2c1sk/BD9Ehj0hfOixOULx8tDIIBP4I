@@ -192,6 +192,7 @@ titleGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0,255,255))
 }
 
+
 TabSelection.Name = "TabSelection"
 TabSelection.Parent = Window
 TabSelection.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -962,15 +963,32 @@ function library:AddWindow(title, options)
 	Window.Size = UDim2.new(0, options.min_size.X, 0, options.min_size.Y)
 	Window.ZIndex = Window.ZIndex + (windows * 10)
 
-	do 
-    local WindowTitle = Window:FindFirstChild("Title")
-		local Bar = Window:FindFirstChild("Bar")
-		local Base = Bar:FindFirstChild("Base")
-		local Top = Bar:FindFirstChild("Top")
-		local SplitFrame = Window:FindFirstChild("TabSelection"):FindFirstChild("Frame")
-		local Toggle = Bar:FindFirstChild("Toggle")
+	
+    -- Title Setup
 
-		
+-- Altering Window Color
+do
+    local Bar = Window:FindFirstChild("Bar")
+    local Base = Bar:FindFirstChild("Base")
+    local Top = Bar:FindFirstChild("Top")
+    local SplitFrame = Window:FindFirstChild("TabSelection"):FindFirstChild("Frame")
+    
+    spawn(function()
+        while true do
+            Bar.BackgroundColor3 = options.main_color
+            Base.BackgroundColor3 = options.main_color
+            Base.ImageColor3 = options.main_color
+            Top.ImageColor3 = options.main_color
+            SplitFrame.BackgroundColor3 = options.main_color
+            RS.Heartbeat:Wait()
+        end
+    end)
+end
+
+-- Animated Title Gradient
+do 
+    local WindowTitle = Window:FindFirstChild("Title")
+    
     spawn(function()
         local grad = WindowTitle:FindFirstChild("UIGradient")
         if grad then
@@ -982,9 +1000,12 @@ function library:AddWindow(title, options)
             end
         end
     end)
+end
 
-	end
 
+
+
+	
 	local Resizer = Window:WaitForChild("Resizer")
 
 	local window_data = {}
