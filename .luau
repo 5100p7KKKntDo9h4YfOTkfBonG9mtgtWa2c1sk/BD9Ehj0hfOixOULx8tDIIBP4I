@@ -1517,6 +1517,138 @@ function library:AddWindow(title, options)
 					end
 				end)
 
+function tab_data:AddMultiDropdown(dropdown_name, callback)
+    local dropdown_data = {}
+    dropdown_name = tostring(dropdown_name or "New Multi Dropdown")
+    callback = typeof(callback) == "function" and callback or function()end
+
+    local dropdown = Prefabs:FindFirstChild("Dropdown"):Clone()
+    local box = dropdown:FindFirstChild("Box")
+    local objects = box:FindFirstChild("Objects")
+    local indicator = dropdown:FindFirstChild("Indicator")
+    dropdown.ZIndex = dropdown.ZIndex + (windows * 10)
+    box.ZIndex = box.ZIndex + (windows * 10)
+    objects.ZIndex = objects.ZIndex + (windows * 10)
+    indicator.ZIndex = indicator.ZIndex + (windows * 10)
+    dropdown:GetChildren()[3].ZIndex = dropdown:GetChildren()[3].ZIndex + (windows * 10)
+
+    dropdown.Parent = new_tab
+    dropdown.Text = "      " .. dropdown_name
+    box.Size = UDim2.new(1, 0, 0, 0)
+
+    local open = false
+    local selected_items = {}
+
+    dropdown.MouseButton1Click:Connect(function()
+        open = not open
+
+        local len = (#objects:GetChildren() - 1) * 20
+        if #objects:GetChildren() - 1 >= 10 then
+            len = 10 * 20
+            objects.CanvasSize = UDim2.new(0, 0, (#objects:GetChildren() - 1) * 0.1, 0)
+        end
+
+        if open then
+            if dropdown_open then return end
+            dropdown_open = true
+            Resize(box, {Size = UDim2.new(1, 0, 0, len)}, options.tween_time)
+            Resize(indicator, {Rotation = 90}, options.tween_time)
+        else
+            dropdown_open = false
+            Resize(box, {Size = UDim2.new(1, 0, 0, 0)}, options.tween_time)
+            Resize(indicator, {Rotation = -90}, options.tween_time)
+        end
+    end)
+
+    function dropdown_data:Add(n)
+        local object_data = {}
+        n = tostring(n or "New Object")
+
+        local object = Prefabs:FindFirstChild("MultiSelectButton"):Clone()
+        local checkmark = object:FindFirstChild("CheckMark")
+        
+        object.Parent = objects
+        object.Text = "      " .. n
+        object.ZIndex = object.ZIndex + (windows * 10)
+        checkmark.ZIndex = checkmark.ZIndex + (windows * 10)
+
+        object.MouseEnter:Connect(function()
+            object.BackgroundColor3 = options.main_color
+        end)
+        object.MouseLeave:Connect(function()
+            object.BackgroundColor3 = Color3.fromRGB(33, 34, 36)
+        end)
+
+        if open then
+            local len = (#objects:GetChildren() - 1) * 20
+            if #objects:GetChildren() - 1 >= 10 then
+                len = 10 * 20
+                objects.CanvasSize = UDim2.new(0, 0, (#objects:GetChildren() - 1) * 0.1, 0)
+            end
+            Resize(box, {Size = UDim2.new(1, 0, 0, len)}, options.tween_time)
+        end
+
+        object.MouseButton1Click:Connect(function()
+            if dropdown_open then
+                if selected_items[n] then
+                    selected_items[n] = nil
+                    checkmark.Text = ""
+                else
+                    selected_items[n] = true
+                    checkmark.Text = "✓"
+                end
+
+                -- Update dropdown text to show selection count
+                local selected_text = ""
+                local count = 0
+                for item, _ in pairs(selected_items) do
+                    count = count + 1
+                    if count == 1 then
+                        selected_text = item
+                    end
+                end
+
+                if count > 1 then
+                    dropdown.Text = "      [ " .. count .. " Selected ]"
+                elseif count == 1 then
+                    dropdown.Text = "      [ " .. selected_text .. " ]"
+                else
+                    dropdown.Text = "      " .. dropdown_name
+                end
+
+                pcall(callback, selected_items)
+            end
+        end)
+
+        function object_data:Remove()
+            if selected_items[n] then
+                selected_items[n] = nil
+            end
+            object:Destroy()
+        end
+
+        return object, object_data
+    end
+
+    function dropdown_data:Clear()
+        selected_items = {}
+        dropdown.Text = "      " .. dropdown_name
+        for _, child in pairs(objects:GetChildren()) do
+            if not child:IsA("UIListLayout") then
+                if child:FindFirstChild("CheckMark") then
+                    child:FindFirstChild("CheckMark").Text = ""
+                end
+            end
+        end
+    end
+
+    function dropdown_data:GetSelected()
+        return selected_items
+    end
+
+    return dropdown_data, dropdown
+end
+
 				function dropdown_data:Add(n)
 					local object_data = {}
 					n = tostring(n or "New Object")
