@@ -2059,124 +2059,130 @@ function library:AddWindow(title, options)
 				return console_data, console
 			end
 			
-			function tab_data:AddHorizontalAlignment()
-						local ha_data = {}
+			function tab_data:AddFolder(folder_name)
+				local folder_data = {}
+				folder_name = tostring(folder_name or "New Folder")
 
-						local ha = Prefabs:FindFirstChild("HorizontalAlignment"):Clone()
-						ha.Parent = new_tab
+				local folder = Prefabs:FindFirstChild("Folder"):Clone()
+				folder.Parent = new_tab
+				folder.ZIndex = folder.ZIndex + (windows * 10)
 
-						function ha_data:AddButton(...)
-							local data, object
-							local ret = {tab_data:AddButton(...)}
-							if typeof(ret[1]) == "table" then
-								data = ret[1]
-								object = ret[2]
-								object.Parent = ha
-								return data, object
-							else
-								object = ret[1]
-								object.Parent = ha
-								return object
-							end
+				local button = folder:FindFirstChild("Button")
+				local objects = folder:FindFirstChild("Objects")
+				local toggle = button:FindFirstChild("Toggle")
+				
+				button.ZIndex = button.ZIndex + (windows * 10)
+				objects.ZIndex = objects.ZIndex + (windows * 10)
+				toggle.ZIndex = toggle.ZIndex + (windows * 10)
+				button:GetChildren()[2].ZIndex = button:GetChildren()[2].ZIndex + (windows * 10)
+
+				button.Text = "      " .. folder_name
+
+				spawn(function()
+					while true do
+						if button and button:GetChildren()[2] then
+							button:GetChildren()[2].ImageColor3 = options.main_color
 						end
+						RS.Heartbeat:Wait()
+					end
+				end)
 
-						return ha_data, ha
+				local open = false
+				button.MouseButton1Click:Connect(function()
+					open = not open
+					objects.Visible = open
+
+					local rot = open and 90 or 0
+					Resize(toggle, {Rotation = rot}, options.tween_time)
+
+					local newsize = 25
+					for i,v in next, objects:GetChildren() do
+						if not v:IsA("UIListLayout") then
+							newsize = newsize + v.AbsoluteSize.Y + 5
+						end
 					end
 
-					function tab_data:AddFolder(folder_name) -- [Folder]
-						local folder_data = {}
+					Resize(folder, {Size = UDim2.new(1, 0, 0, open and newsize or 20)}, options.tween_time)
+				end)
 
-						folder_name = tostring(folder_name or "New Folder")
-
-						local folder = Prefabs:FindFirstChild("Folder"):Clone()
-						local button = folder:FindFirstChild("Button")
-						local objects = folder:FindFirstChild("Objects")
-						local toggle = button:FindFirstChild("Toggle")
-						folder.ZIndex = folder.ZIndex + (windows * 10)
-						button.ZIndex = button.ZIndex + (windows * 10)
-						objects.ZIndex = objects.ZIndex + (windows * 10)
-						toggle.ZIndex = toggle.ZIndex + (windows * 10)
-						button:GetChildren()[1].ZIndex = button:GetChildren()[1].ZIndex + (windows * 10)
-
-						folder.Parent = new_tab
-						button.Text = "      " .. folder_name
-
-						spawn(function()
-							while true do
-								if button and button:GetChildren()[1] then
-									button:GetChildren()[1].ImageColor3 = options.main_color
-								end
-								RS.Heartbeat:Wait()
-							end
-						end)
-
-						local function gFolderLen()
-							local n = 25
-							for i,v in next, objects:GetChildren() do
-								if not (v:IsA("UIListLayout")) then
-									n = n + v.AbsoluteSize.Y + 5
-								end
-							end
-							return n
-						end
-
-						local open = false
-						button.MouseButton1Click:Connect(function()
-							if open then -- Close
-								Resize(toggle, {Rotation = 0}, options.tween_time)
-								objects.Visible = false
-							else -- Open
-								Resize(toggle, {Rotation = 90}, options.tween_time)
-								objects.Visible = true
-							end
-
-							open = not open
-						end)
-
-						spawn(function()
-							while true do
-								Resize(folder, {Size = UDim2.new(1, 0, 0, (open and gFolderLen() or 20))}, options.tween_time)
-								wait()
-							end
-						end)
-
-						for i,v in next, tab_data do
-							folder_data[i] = function(...)
-								local data, object
-								local ret = {v(...)}
-								if typeof(ret[1]) == "table" then
-									data = ret[1]
-									object = ret[2]
-									object.Parent = objects
-									return data, object
-								else
-									object = ret[1]
-									object.Parent = objects
-									return object
-								end
-							end
-						end
-
-						return folder_data, folder
-					end
-
+				folder_data.AddLabel = function(self, ...)
+					local label = tab_data:AddLabel(...)
+					label.Parent = objects
+					return label
 				end
 
-				return tab_data, new_tab
+				folder_data.AddButton = function(self, ...)
+					local button = tab_data:AddButton(...)
+					button.Parent = objects
+					return button
+				end
+
+				folder_data.AddSwitch = function(self, ...)
+					local switch_data, switch = tab_data:AddSwitch(...)
+					switch.Parent = objects
+					return switch_data, switch
+				end
+
+				folder_data.AddTextBox = function(self, ...)
+					local textbox = tab_data:AddTextBox(...)
+					textbox.Parent = objects
+					return textbox
+				end
+
+				folder_data.AddSlider = function(self, ...)
+					local slider_data, slider = tab_data:AddSlider(...)
+					slider.Parent = objects
+					return slider_data, slider
+				end
+
+				folder_data.AddKeybind = function(self, ...)
+					local keybind_data, keybind = tab_data:AddKeybind(...)
+					keybind.Parent = objects
+					return keybind_data, keybind
+				end
+
+				folder_data.AddDropdown = function(self, ...)
+					local dropdown_data, dropdown = tab_data:AddDropdown(...)
+					dropdown.Parent = objects
+					return dropdown_data, dropdown
+				end
+
+				folder_data.AddColorPicker = function(self, ...)
+					local color_picker_data, color_picker = tab_data:AddColorPicker(...)
+					color_picker.Parent = objects
+					return color_picker_data, color_picker
+				end
+
+				return folder_data, folder
 			end
+
+			show()
+			return tab_data
 		end
+
+		return window_data
 	end
 
-	do
-		for i, v in next, Window:GetDescendants() do
-			if hasprop(v, "ZIndex") then
-				v.ZIndex = v.ZIndex + (windows * 10)
-			end
-		end
-	end
-
-	return window_data, Window
+	return window_data
 end
 
 return library
+			
+			
+			
+			
+			
+			
+			
+
+
+
+
+
+
+
+
+
+
+
 
