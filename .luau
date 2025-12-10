@@ -1000,6 +1000,7 @@ end
 
 local windows = 0
 local library = {}
+local dropdown_open = false  
 
 local function format_windows()
 	local ull = Prefabs:FindFirstChild("UIListLayout"):Clone()
@@ -1600,66 +1601,89 @@ function library:AddWindow(title, options)
     items = items or {}
 
     local dropdown = Prefabs.MultiDropdown:Clone()
-    local box = dropdown.Box
-    local objects = box.Objects
-    local indicator = dropdown.Indicator
+    local box = dropdown:FindFirstChild("Box")
+    local objects = box:FindFirstChild("Objects")
+    local indicator = dropdown:FindFirstChild("Indicator")
 
     dropdown.Parent = new_tab
     dropdown.Text = "      " .. name
 
     local open = false
+
     dropdown.MouseButton1Click:Connect(function()
         open = not open
-        dropdown_open = open
+        dropdown_open = open  -- importanteng global ito (may fix sa baba)
 
-        local height = math.min(#items, 8) * 22
-        Resize(box, {Size = UDim2.new(1,0,0, open and height or 0)}, 0.12)
-        Resize(indicator, {Rotation = open and 90 or -90}, 0.12)
+        local maxVisible = 8
+        local itemHeight = 22
+        local neededHeight = #items * itemHeight
+        local finalHeight = math.min(neededHeight, maxVisible * itemHeight)
+
+        if open then
+            box.Visible = true
+            Resize(box, {Size = UDim2.new(1, 0, 0, finalHeight)}, 0.15)
+            Resize(indicator, {Rotation = 90}, 0.15)
+        else
+            Resize(box, {Size = UDim2.new(1, 0, 0, 0)}, 0.15)
+            Resize(indicator, {Rotation = -90}, 0.15)
+            task.delay(0.16, function()
+                if not open then box.Visible = false end
+            end)
+        end
     end)
 
-    for _, item in ipairs(items) do
+    -- Create options
+    for _, itemName in ipairs(items) do
         local option = Prefabs.MultiOption:Clone()
         option.Parent = objects
-        option.Text = "      " .. tostring(item)
+        option.Text = "      " .. tostring(itemName)
+        option.ZIndex = option.ZIndex + (windows * 10)
 
-        local check = option.Check
+        local check = option:FindFirstChild("Check")
+
         option.MouseButton1Click:Connect(function()
-            if multi_data.selected[item] then
-                multi_data.selected[item] = nil
+            local cleanName = option.Text:gsub("^%s*(.-)%s*$", "%1") -- remove all spaces
+            if multi_data.selected[cleanName] then
+                multi_data.selected[cleanName] = nil
                 check.ImageTransparency = 1
             else
-                multi_data.selected[item] = true
+                multi_data.selected[cleanName] = true
                 check.ImageTransparency = 0
             end
 
-            local selected_text = ""
-            for sel,_ in pairs(multi_data.selected) do
-                if selected_text ~= "" then selected_text = selected_text .. ", " end
-                selected_text = selected_text .. sel
+            -- Update text
+            local selectedList = {}
+            for k, v in pairs(multi_data.selected) do
+                if v then table.insert(selectedList, k) end
             end
-            dropdown.Text = "      " .. (selected_text ~= "" and selected_text or name)
+            local display = #selectedList > 0 and table.concat(selectedList, ", ") or name
+            if #display > 35 then display = display:sub(1, 32) .. "..." end
+            dropdown.Text = "      " .. display
 
             pcall(callback, multi_data.selected)
         end)
     end
 
-    objects.CanvasSize = UDim2.new(0,0,0, #items * 22)
+    objects.CanvasSize = UDim2.new(0, 0, 0, #items * 22)
 
-    function multi_data:Set(tbl)
-        multi_data.selected = typeof(tbl) == "table" and tbl or {}
+    -- Set function (para ma-preselect)
+    function multi_data:Set(selectedTable)
+        multi_data.selected = typeof(selectedTable) == "table" and selectedTable or {}
         for _, opt in ipairs(objects:GetChildren()) do
             if opt:IsA("TextButton") then
-                local text = opt.Text:gsub("      ", "")
-                opt.Check.ImageTransparency = multi_data.selected[text] and 0 or 1
+                local cleanName = opt.Text:gsub("^%s*(.-)%s*$", "%1")
+                opt.Check.ImageTransparency = multi_data.selected[cleanName] and 0 or 1
             end
         end
-        -- update display text
-        local selected_text = ""
-        for sel,_ in pairs(multi_data.selected) do
-            if selected_text ~= "" then selected_text = selected_text .. ", " end
-            selected_text = selected_text .. sel
+
+        local selectedList = {}
+        for k, v in pairs(multi_data.selected) do
+            if v then table.insert(selectedList, k) end
         end
-        dropdown.Text = "      " .. (selected_text ~= "" and selected_text or name)
+        local display = #selectedList > 0 and table.concat(selectedList, ", ") or name
+        if #display > 35 then display = display:sub(1, 32) .. "..." end
+        dropdown.Text = "      " .. display
+
         pcall(callback, multi_data.selected)
     end
 
