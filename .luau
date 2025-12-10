@@ -267,7 +267,8 @@ Title_2.Name = "Title"
 Title_2.Parent = Slider
 Title_2.BackgroundColor3 = Color3.new(1, 1, 1)
 Title_2.BackgroundTransparency = 1
-Title_2.Position = UDim2.new(0.5, 0, 0.5, -10)
+Title_2.Position = UDim2.new(0, 5, 0, 0) 
+Title_2.TextXAlignment = Enum.TextXAlignment.Left
 Title_2.Size = UDim2.new(0, 0, 0, 20)
 Title_2.ZIndex = 2
 Title_2.Font = Enum.Font.Merriweather
@@ -737,7 +738,7 @@ Title_3.Name = "Title"
 Title_3.Parent = Switch
 Title_3.BackgroundColor3 = Color3.new(1, 1, 1)
 Title_3.BackgroundTransparency = 1
-Title_3.Position = UDim2.new(1.20000005, 0, 0, 0)
+Title_3.Position = UDim2.new(0, 25, 0, 0)  
 Title_3.Size = UDim2.new(0, 21, 0, 21)
 Title_3.Font = Enum.Font.Garamond
 Title_3.Text = "Switch"
@@ -2171,18 +2172,6 @@ return library
 			
 			
 			
-			
-			
-			
-
-
-
-
-
-
-
-
-
-
+		
 
 
