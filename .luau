@@ -459,11 +459,14 @@ MultiOption.TextXAlignment = Enum.TextXAlignment.Left
 MultiCheck.Name = "Check"
 MultiCheck.Parent = MultiOption
 MultiCheck.BackgroundTransparency = 1
-MultiCheck.Position = UDim2.new(1, -25, 0.5, -8)
-MultiCheck.Size = UDim2.new(0, 16, 0, 16)
+MultiCheck.Position = UDim2.new(1, -25, 0.5, -10)
+MultiCheck.Size = UDim2.new(0, 20, 0, 20)
 MultiCheck.ZIndex = 7
-MultiCheck.Image = "rbxassetid://6031097225"
-MultiCheck.ImageTransparency = 1
+MultiCheck.Font = Enum.Font.GothamBold
+MultiCheck.Text = "✓"
+MultiCheck.TextColor3 = Color3.new(0, 1, 0)
+MultiCheck.TextSize = 18
+MultiCheck.TextTransparency = 1  
 
 TabButton.Name = "TabButton"
 TabButton.Parent = Prefabs
@@ -1593,7 +1596,6 @@ function library:AddWindow(title, options)
 					end
 					
 					
-					
 					function tab_data:AddMultiDropdown(name, items, callback)
     local multi_data = {selected = {}}
     name = tostring(name or "Multi Select")
@@ -1605,14 +1607,22 @@ function library:AddWindow(title, options)
     local objects = box:FindFirstChild("Objects")
     local indicator = dropdown:FindFirstChild("Indicator")
 
+    -- FIX: Set proper ZIndex for all elements
     dropdown.Parent = new_tab
+    dropdown.ZIndex = dropdown.ZIndex + (windows * 10)
+    box.ZIndex = box.ZIndex + (windows * 10)
+    objects.ZIndex = objects.ZIndex + (windows * 10)
+    indicator.ZIndex = indicator.ZIndex + (windows * 10)
+    dropdown:FindFirstChild("Roundify").ZIndex = dropdown:FindFirstChild("Roundify").ZIndex + (windows * 10)
+    
     dropdown.Text = "      " .. name
+    box.Visible = false -- FIX: Start hidden
 
     local open = false
 
     dropdown.MouseButton1Click:Connect(function()
         open = not open
-        dropdown_open = open  -- importanteng global ito (may fix sa baba)
+        dropdown_open = open
 
         local maxVisible = 8
         local itemHeight = 22
@@ -1637,28 +1647,37 @@ function library:AddWindow(title, options)
         local option = Prefabs.MultiOption:Clone()
         option.Parent = objects
         option.Text = "      " .. tostring(itemName)
+        
+        -- FIX: Proper ZIndex for option and check
         option.ZIndex = option.ZIndex + (windows * 10)
-
         local check = option:FindFirstChild("Check")
+        check.ZIndex = check.ZIndex + (windows * 10)
 
         option.MouseButton1Click:Connect(function()
-            local cleanName = option.Text:gsub("^%s*(.-)%s*$", "%1") -- remove all spaces
-            if multi_data.selected[cleanName] then
-                multi_data.selected[cleanName] = nil
+            -- FIX: Use original itemName instead of cleaning text
+            if multi_data.selected[itemName] then
+                multi_data.selected[itemName] = nil
                 check.ImageTransparency = 1
             else
-                multi_data.selected[cleanName] = true
+                multi_data.selected[itemName] = true
                 check.ImageTransparency = 0
             end
 
-            -- Update text
+            -- Update text display
             local selectedList = {}
             for k, v in pairs(multi_data.selected) do
                 if v then table.insert(selectedList, k) end
             end
-            local display = #selectedList > 0 and table.concat(selectedList, ", ") or name
-            if #display > 35 then display = display:sub(1, 32) .. "..." end
-            dropdown.Text = "      " .. display
+            
+            if #selectedList > 0 then
+                local display = table.concat(selectedList, ", ")
+                if #display > 30 then 
+                    display = display:sub(1, 27) .. "..." 
+                end
+                dropdown.Text = "      " .. display
+            else
+                dropdown.Text = "      " .. name
+            end
 
             pcall(callback, multi_data.selected)
         end)
@@ -1666,31 +1685,42 @@ function library:AddWindow(title, options)
 
     objects.CanvasSize = UDim2.new(0, 0, 0, #items * 22)
 
-    -- Set function (para ma-preselect)
+    -- Set function
     function multi_data:Set(selectedTable)
         multi_data.selected = typeof(selectedTable) == "table" and selectedTable or {}
+        
         for _, opt in ipairs(objects:GetChildren()) do
             if opt:IsA("TextButton") then
-                local cleanName = opt.Text:gsub("^%s*(.-)%s*$", "%1")
-                opt.Check.ImageTransparency = multi_data.selected[cleanName] and 0 or 1
+                -- FIX: Get original item name properly
+                local itemText = opt.Text:gsub("^%s+", ""):gsub("%s+$", "")
+                local check = opt:FindFirstChild("Check")
+                if check then
+                    check.ImageTransparency = multi_data.selected[itemText] and 0 or 1
+                end
             end
         end
 
+        -- Update display
         local selectedList = {}
         for k, v in pairs(multi_data.selected) do
             if v then table.insert(selectedList, k) end
         end
-        local display = #selectedList > 0 and table.concat(selectedList, ", ") or name
-        if #display > 35 then display = display:sub(1, 32) .. "..." end
-        dropdown.Text = "      " .. display
+        
+        if #selectedList > 0 then
+            local display = table.concat(selectedList, ", ")
+            if #display > 30 then 
+                display = display:sub(1, 27) .. "..." 
+            end
+            dropdown.Text = "      " .. display
+        else
+            dropdown.Text = "      " .. name
+        end
 
         pcall(callback, multi_data.selected)
     end
 
     return multi_data, dropdown
 end
-					
-					
 
 					function tab_data:AddColorPicker(callback)
 						local color_picker_data = {}
